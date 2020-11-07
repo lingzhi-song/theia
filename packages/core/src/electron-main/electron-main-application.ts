@@ -344,8 +344,8 @@ export class ElectronMainApplication {
      */
     protected attachWillPreventUnload(electronWindow: BrowserWindow): void {
         // Fired when a beforeunload handler tries to prevent the page unloading
-        electronWindow.webContents.on('will-prevent-unload', async event => {
-            const { response } = await dialog.showMessageBox(electronWindow, {
+        electronWindow.webContents.on('will-prevent-unload', event => {
+            const response = dialog.showMessageBoxSync(electronWindow, {
                 type: 'question',
                 buttons: ['Yes', 'No'],
                 title: 'Confirm',

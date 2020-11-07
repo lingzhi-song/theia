@@ -15,6 +15,8 @@
  ********************************************************************************/
 
 import { injectable, inject } from 'inversify';
+import { remote } from 'electron';
+import { Event } from '../../common/event';
 import { NewWindowOptions } from '../../browser/window/window-service';
 import { DefaultWindowService } from '../../browser/window/default-window-service';
 import { ElectronMainWindowService } from '../../electron-common/electron-main-window-service';
@@ -28,6 +30,18 @@ export class ElectronWindowService extends DefaultWindowService {
     openNewWindow(url: string, { external }: NewWindowOptions = {}): undefined {
         this.delegate.openNewWindow(url, { external });
         return undefined;
+    }
+
+    registerUnloadListener(): void {
+        remote.getCurrentWindow().on('closed', () => this.onUnloadEmitter.fire());
+    }
+
+    /**
+     * Unlike the default implementation, this even is fires when the `ElectronWindow`
+     * [closes](https://github.com/electron/electron/blob/master/docs/api/browser-window.md#event-close).
+     */
+    get onUnload(): Event<void> {
+        return this.onUnloadEmitter.event;
     }
 
     protected preventUnload(event: BeforeUnloadEvent): string | void {
