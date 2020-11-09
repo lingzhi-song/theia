@@ -71,13 +71,15 @@ describe('Saveable', function () {
         await fileService.create(fileUri, 'foo', { fromUserGesture: false, overwrite: true });
         widget =  /** @type {EditorWidget & SaveableWidget} */
             (await editorManager.open(fileUri, { mode: 'reveal' }));
-        editor = MonacoEditor.get(widget);
+        editor = /** @type {MonacoEditor} */ (MonacoEditor.get(widget));
     });
 
     afterEach(async () => {
         toTearDown.dispose();
         preferences.set('editor.autoSave', autoSave, undefined, rootUri.toString());
+        // @ts-ignore
         editor = undefined;
+        // @ts-ignore
         widget = undefined;
         await editorManager.closeAll({ save: false });
         await fileService.delete(fileUri.parent, { fromUserGesture: false, useTrash: false, recursive: true });
@@ -104,6 +106,7 @@ describe('Saveable', function () {
         editor.getControl().setValue(longContent);
         await Saveable.save(widget);
 
+        // @ts-ignore
         editor.getControl().getModel().applyEdits([{
             range: monaco.Range.fromPositions({ lineNumber: 1, column: 1 }, { lineNumber: 1, column: 4 }),
             forceMoveMarkers: false,
@@ -113,6 +116,7 @@ describe('Saveable', function () {
 
         const resource = editor.document['resource'];
         const version = resource.version;
+        // @ts-ignore
         await resource.saveContents('baz');
         assert.notEqual(version, resource.version, 'latest version should be different after write');
 
@@ -128,6 +132,7 @@ describe('Saveable', function () {
         const saveContentChanges = resource.saveContentChanges;
         resource.saveContentChanges = async (changes, options) => {
             incrementalUpdate = true;
+            // @ts-ignore
             return saveContentChanges.bind(resource)(changes, options);
         };
         try {
@@ -156,6 +161,7 @@ describe('Saveable', function () {
 
         const resource = editor.document['resource'];
         const version = resource.version;
+        // @ts-ignore
         await resource.saveContents('bazz');
         assert.notEqual(version, resource.version, 'latest version should be different after write');
 
@@ -289,6 +295,8 @@ describe('Saveable', function () {
         const listener = () => waitForDidChangeTitle.resolve();
         widget.title.changed.connect(listener);
         try {
+            // Wait a little before attempting to `delete` so watchers are properly notified.
+            await new Promise(resolve => setTimeout(resolve, 1000));
             await fileService.delete(fileUri);
             await waitForDidChangeTitle.promise;
             assert.isTrue(widget.title.label.endsWith('(deleted from disk)'), 'should be marked as deleted');
@@ -390,7 +398,7 @@ describe('Saveable', function () {
 
         widget =  /** @type {EditorWidget & SaveableWidget} */
             (await editorManager.open(fileUri, { mode: 'reveal' }));
-        editor = MonacoEditor.get(widget);
+        editor = /** @type {MonacoEditor} */ (MonacoEditor.get(widget));
 
         assert.strictEqual('utf8', editor.document.getEncoding());
         assert.strictEqual('foo', editor.document.getText().trimRight());
@@ -413,7 +421,7 @@ describe('Saveable', function () {
 
         widget =  /** @type {EditorWidget & SaveableWidget} */
             (await editorManager.open(fileUri, { mode: 'reveal' }));
-        editor = MonacoEditor.get(widget);
+        editor = /** @type {MonacoEditor} */ (MonacoEditor.get(widget));
 
         assert.strictEqual('utf16le', editor.document.getEncoding());
         assert.notEqual('foo', editor.document.getText().trimRight());
@@ -434,7 +442,7 @@ describe('Saveable', function () {
 
         widget =  /** @type {EditorWidget & SaveableWidget} */
             (await editorManager.open(fileUri, { mode: 'reveal' }));
-        editor = MonacoEditor.get(widget);
+        editor = /** @type {MonacoEditor} */ (MonacoEditor.get(widget));
 
         assert.strictEqual('utf16le', editor.document.getEncoding());
         assert.strictEqual('foo', editor.document.getText().trimRight());
